@@ -94,37 +94,94 @@
     </div>
 
     <script>
-        // Attach listener via JS to guarantee mobile Safari registration
-        document.getElementById('action-btn').addEventListener('click', function() {
+        // Authentic 14.4k Modem Handshake Synthesizer
+        function playModemHandshake() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 const ctx = new AudioContext();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(350, ctx.currentTime);
-                osc.frequency.setValueAtTime(440, ctx.currentTime + 0.5);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 1.2);
+                const now = ctx.currentTime;
+
+                // 1. Dial tones (DTMF style brief beeps)
+                playTone(ctx, 1209, now, 0.1);
+                playTone(ctx, 697, now + 0.15, 0.1);
+
+                // 2. Dialing static & noise burst
+                playNoiseBurst(ctx, now + 0.4, 0.8);
+
+                // 3. Remote modem answering tone (2100 Hz high tone)
+                playTone(ctx, 2100, now + 1.3, 1.0, 0.08, 'sine');
+
+                // 4. V.32bis / V.34 scrambled handshake screeches & training tones
+                playTone(ctx, 1200, now + 2.4, 0.6, 0.06, 'sawtooth');
+                playTone(ctx, 2400, now + 2.5, 0.5, 0.05, 'square');
+                playNoiseBurst(ctx, now + 3.1, 1.2); // Carrier training noise
+                playTone(ctx, 1800, now + 4.3, 0.5, 0.06, 'sine');
+
             } catch (e) {
-                console.log('Audio restricted');
+                console.log('Audio context restricted', e);
             }
+        }
+
+        function playTone(ctx, freq, startTime, duration, vol = 0.1, type = 'sine') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            gain.gain.setValueAtTime(vol, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        function playNoiseBurst(ctx, startTime, duration) {
+            const bufferSize = ctx.sampleRate * duration;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            // Filter the noise to sound like telephone line static
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1500;
+            filter.Q.value = 3;
+
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.08, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            noise.start(startTime);
+        }
+
+        // Button Click Event Handler
+        document.getElementById('action-btn').addEventListener('click', function() {
+            playModemHandshake();
 
             const textEl = document.getElementById('terminal-text');
             const btnEl = document.getElementById('action-btn');
             const navEl = document.getElementById('nav-matrix');
 
             btnEl.style.display = 'none';
-            textEl.innerHTML = "CARRIER DETECTED.<br>DECRYPTING REPOSITORY NODES...";
+            textEl.innerHTML = "DIALING 555-1994...<br>SYNCHRONIZING CARRIER SIGNAL...";
 
             setTimeout(() => {
-                textEl.innerHTML = "NODE SECURED.<br>WARNING: SYSTEM PROTOCOL ENFORCES RIGHT-TURN-ONLY TRAVERSAL.";
+                textEl.innerHTML = "CONNECT 14400 / ARQ / V32BIS<br>WARNING: SYSTEM PROTOCOL ENFORCES RIGHT-TURN-ONLY TRAVERSAL.";
                 navEl.style.display = 'flex';
-            }, 1500);
+            }, 5000); // Matches the ~5 second duration of the authentic handshake audio sequence
         });
 
         function navigateNode(direction) {
