@@ -94,40 +94,82 @@
     </div>
 
     <script>
-        // Authentic 14.4k Modem Handshake Synthesizer
-        function playModemHandshake() {
+        // High-fidelity 1994 Dial-up Handshake Synthesizer
+        function playAuthenticModem() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 const ctx = new AudioContext();
                 const now = ctx.currentTime;
 
-                // 1. Dial tones (DTMF style brief beeps)
-                playTone(ctx, 1209, now, 0.1);
-                playTone(ctx, 697, now + 0.15, 0.1);
+                // 1. DTMF Dial Tones (1-9-9-4 sequence digits)
+                playDTMF(ctx, 697, 1209, now, 0.08); // 1
+                playDTMF(ctx, 770, 1477, now + 0.12, 0.08); // 9
+                playDTMF(ctx, 770, 1477, now + 0.24, 0.08); // 9
+                playDTMF(ctx, 697, 1336, now + 0.36, 0.08); // 4
 
-                // 2. Dialing static & noise burst
-                playNoiseBurst(ctx, now + 0.4, 0.8);
+                // 2. Line static / dialing noise burst
+                playTelephoneNoise(ctx, now + 0.5, 0.6);
 
-                // 3. Remote modem answering tone (2100 Hz high tone)
-                playTone(ctx, 2100, now + 1.3, 1.0, 0.08, 'sine');
+                // 3. Remote Modem Answering Tone (2225 Hz bell tone with slight warble)
+                playTone(ctx, 2225, now + 1.2, 0.9, 0.07, 'sine');
 
-                // 4. V.32bis / V.34 scrambled handshake screeches & training tones
-                playTone(ctx, 1200, now + 2.4, 0.6, 0.06, 'sawtooth');
-                playTone(ctx, 2400, now + 2.5, 0.5, 0.05, 'square');
-                playNoiseBurst(ctx, now + 3.1, 1.2); // Carrier training noise
-                playTone(ctx, 1800, now + 4.3, 0.5, 0.06, 'sine');
+                // 4. V.32bis High-pitched training screeches (Harsh alternating square/sawtooth waves)
+                playScreech(ctx, 1800, 2400, now + 2.1, 0.4, 0.08, 'sawtooth');
+                playScreech(ctx, 1200, 2600, now + 2.5, 0.5, 0.08, 'square');
+
+                // 5. Data handshake chatter / fast modulation burst
+                playModulationChatter(ctx, now + 3.0, 1.5);
+
+                // 6. Final high carrier tone lock
+                playTone(ctx, 2400, now + 4.5, 0.4, 0.05, 'sine');
 
             } catch (e) {
                 console.log('Audio context restricted', e);
             }
         }
 
-        function playTone(ctx, freq, startTime, duration, vol = 0.1, type = 'sine') {
+        function playTone(ctx, freq, startTime, duration, vol, type) {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, startTime);
+            gain.gain.setValueAtTime(vol, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        function playDTMF(ctx, f1, f2, startTime, duration) {
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc1.frequency.setValueAtTime(f1, startTime);
+            osc2.frequency.setValueAtTime(f2, startTime);
             
+            gain.gain.setValueAtTime(0.06, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc1.start(startTime);
+            osc2.start(startTime);
+            osc1.stop(startTime + duration);
+            osc2.stop(startTime + duration);
+        }
+
+        function playScreech(ctx, startFreq, endFreq, startTime, duration, vol, type) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            
+            osc.frequency.setValueAtTime(startFreq, startTime);
+            osc.frequency.linearRampToValueAtTime(endFreq, startTime + duration);
+
             gain.gain.setValueAtTime(vol, startTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
@@ -138,26 +180,23 @@
             osc.stop(startTime + duration);
         }
 
-        function playNoiseBurst(ctx, startTime, duration) {
+        function playTelephoneNoise(ctx, startTime, duration) {
             const bufferSize = ctx.sampleRate * duration;
             const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
             const data = buffer.getChannelData(0);
-            
             for (let i = 0; i < bufferSize; i++) {
                 data[i] = Math.random() * 2 - 1;
             }
-
             const noise = ctx.createBufferSource();
             noise.buffer = buffer;
 
-            // Filter the noise to sound like telephone line static
             const filter = ctx.createBiquadFilter();
             filter.type = 'bandpass';
-            filter.frequency.value = 1500;
-            filter.Q.value = 3;
+            filter.frequency.value = 1200;
+            filter.Q.value = 4;
 
             const gain = ctx.createGain();
-            gain.gain.setValueAtTime(0.08, startTime);
+            gain.gain.setValueAtTime(0.07, startTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
             noise.connect(filter);
@@ -167,21 +206,32 @@
             noise.start(startTime);
         }
 
+        function playModulationChatter(ctx, startTime, duration) {
+            // Rapid multi-frequency sequence mimicking data packet negotiation
+            const steps = 12;
+            const stepDuration = duration / steps;
+            const freqs = [1200, 2400, 900, 1800, 2100, 1500, 2700, 800, 2200, 1600, 2000, 1100];
+
+            for (let i = 0; i < steps; i++) {
+                playTone(ctx, freqs[i], startTime + (i * stepDuration), stepDuration, 0.05, 'sawtooth');
+            }
+        }
+
         // Button Click Event Handler
         document.getElementById('action-btn').addEventListener('click', function() {
-            playModemHandshake();
+            playAuthenticModem();
 
             const textEl = document.getElementById('terminal-text');
             const btnEl = document.getElementById('action-btn');
             const navEl = document.getElementById('nav-matrix');
 
             btnEl.style.display = 'none';
-            textEl.innerHTML = "DIALING 555-1994...<br>SYNCHRONIZING CARRIER SIGNAL...";
+            textEl.innerHTML = "DIALING 555-1994...<br>HANDSHAKING CARRIER FREQUencies...";
 
             setTimeout(() => {
-                textEl.innerHTML = "CONNECT 14400 / ARQ / V32BIS<br>WARNING: SYSTEM PROTOCOL ENFORCES RIGHT-TURN-ONLY TRAVERSAL.";
+                textEl.innerHTML = "CONNECT 14400 / V.32BIS<br>WARNING: SYSTEM PROTOCOL ENFORCES RIGHT-TURN-ONLY TRAVERSAL.";
                 navEl.style.display = 'flex';
-            }, 5000); // Matches the ~5 second duration of the authentic handshake audio sequence
+            }, 5200);
         });
 
         function navigateNode(direction) {
