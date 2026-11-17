@@ -5,223 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAFFRON-94 // TERMINAL NODE</title>
     <style>
-        :root {
-            --bg-color: #050505;
-            --terminal-green: #00ff66;
-            --terminal-dim: #003311;
-            --alert-amber: #ffb000;
-            --scanline-color: rgba(0, 255, 102, 0.03);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--terminal-green);
+            background-color: #050505;
+            color: #00ff66;
             font-family: 'Courier New', Courier, monospace;
-            height: 100vh;
+            padding: 20px;
+            margin: 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            overflow: hidden;
-            position: relative;
+            min-height: 100vh;
         }
 
-        /* CRT Scanline Overlay */
-        body::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, var(--scanline-color) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 10;
-            background-size: 100% 3px, 3px 100%;
-            pointer-events: none;
-        }
-
-        header {
-            border-bottom: 1px dashed var(--terminal-green);
+        .header {
+            border-bottom: 1px dashed #00ff66;
             padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-size: 0.85rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: var(--terminal-green);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--terminal-green);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.2; }
-            50% { opacity: 1; }
-            100% { opacity: 0.2; }
-        }
-
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            z-index: 2;
-            padding: 20px;
         }
 
         .terminal-box {
-            border: 1px solid var(--terminal-green);
-            padding: 24px;
-            max-width: 480px;
+            border: 1px solid #00ff66;
+            padding: 20px;
+            max-width: 500px;
             width: 100%;
-            background: rgba(0, 10, 3, 0.85);
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.15);
-            position: relative;
+            margin: auto;
+            background: #000a03;
         }
 
         h1 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 15px;
-            letter-spacing: 2px;
             text-transform: uppercase;
         }
 
         p {
             font-size: 0.9rem;
             line-height: 1.5;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             color: #aaffcc;
         }
 
-        .btn-dial {
-            background: transparent;
-            border: 1px solid var(--terminal-green);
-            color: var(--terminal-green);
-            padding: 14px 24px;
+        button {
+            background: #003311;
+            border: 2px solid #00ff66;
+            color: #00ff66;
+            padding: 16px 20px;
             font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 1rem;
             font-weight: bold;
-            letter-spacing: 2px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
             width: 100%;
-            -webkit-tap-highlight-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .btn-dial:hover, .btn-dial:active {
-            background: var(--terminal-green);
-            color: var(--bg-color);
-            box-shadow: 0 0 15px var(--terminal-green);
+        button:active {
+            background: #00ff66;
+            color: #050505;
         }
 
-        /* Navigation Matrix */
         .nav-matrix {
             display: none;
-            grid-template-columns: 1fr;
-            gap: 10px;
+            flex-direction: column;
+            gap: 12px;
             margin-top: 15px;
-        }
-
-        .btn-nav {
-            background: rgba(0, 51, 17, 0.4);
-            border: 1px dashed var(--terminal-green);
-            color: var(--terminal-green);
-            padding: 12px;
-            font-family: inherit;
-            font-size: 0.85rem;
-            cursor: pointer;
-            text-align: left;
-            transition: background 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .btn-nav:hover, .btn-nav:active {
-            background: var(--terminal-green);
-            color: var(--bg-color);
-        }
-
-        footer {
-            font-size: 0.75rem;
-            text-align: center;
-            border-top: 1px dashed var(--terminal-dim);
-            padding-top: 10px;
-            color: #00aa44;
-            letter-spacing: 1px;
-        }
-
-        .node-coords {
-            color: var(--alert-amber);
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>SYS.ID: <span class="node-coords">SAFFRON-94</span></div>
-        <div><span class="status-indicator"></span> ONLINE</div>
-    </header>
+    <div class="header">
+        <div>SYS.ID: SAFFRON-94</div>
+        <div>ONLINE</div>
+    </div>
 
-    <main>
-        <div class="terminal-box">
-            <h1>Terminal Node 1994</h1>
-            <p id="terminal-text">ESTABLISHING SECURE HANDSHAKE...<br>READY FOR CARRIER SIGNAL ACQUISITION.</p>
-            
-            <button class="btn-dial" id="action-btn" onclick="initializeHandshake(event)" ontouchend="initializeHandshake(event)">[ DIAL IN ]</button>
+    <div class="terminal-box">
+        <h1>Terminal Node 1994</h1>
+        <p id="terminal-text">ESTABLISHING SECURE HANDSHAKE...<br>READY FOR CARRIER SIGNAL ACQUISITION.</p>
+        
+        <button id="action-btn" type="button">[ DIAL IN ]</button>
 
-            <div class="nav-matrix" id="nav-matrix">
-                <button class="btn-nav" onclick="navigateNode('right')" ontouchend="navigateNode('right')">> TURN RIGHT (090°)</button>
-                <button class="btn-nav" onclick="navigateNode('right-deep')" ontouchend="navigateNode('right-deep')">> TURN RIGHT // DEEPER NODE</button>
-            </div>
+        <div class="nav-matrix" id="nav-matrix">
+            <button type="button" onclick="navigateNode('right')">> TURN RIGHT (090°)</button>
+            <button type="button" onclick="navigateNode('right-deep')">> TURN RIGHT // DEEPER NODE</button>
         </div>
-    </main>
-
-    <footer>
-        SECURE PROTOCOL ACTIVE // 1994 REPOSITORY
-    </footer>
+    </div>
 
     <script>
-        // Web Audio API Modem Handshake Simulator
-        function playModemTone() {
+        // Attach listener via JS to guarantee mobile Safari registration
+        document.getElementById('action-btn').addEventListener('click', function() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 const ctx = new AudioContext();
-
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(350, ctx.currentTime);
                 osc.frequency.setValueAtTime(440, ctx.currentTime + 0.5);
-                
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-
                 osc.start();
                 osc.stop(ctx.currentTime + 1.2);
             } catch (e) {
-                console.log('Audio context restricted until direct user interaction.');
+                console.log('Audio restricted');
             }
-        }
 
-        function initializeHandshake(e) {
-            if (e) e.preventDefault();
-            playModemTone();
-            
             const textEl = document.getElementById('terminal-text');
             const btnEl = document.getElementById('action-btn');
             const navEl = document.getElementById('nav-matrix');
@@ -231,9 +123,17 @@
 
             setTimeout(() => {
                 textEl.innerHTML = "NODE SECURED.<br>WARNING: SYSTEM PROTOCOL ENFORCES RIGHT-TURN-ONLY TRAVERSAL.";
-                navEl.style.display = 'grid';
-            }, 1800);
-        }
+                navEl.style.display = 'flex';
+            }, 1500);
+        });
 
         function navigateNode(direction) {
-            const textEl = document.getElementById
+            const textEl = document.getElementById('terminal-text');
+            textEl.innerHTML = `TRAVERSING VECTOR [${direction.toUpperCase()}]...<br>ROTATING 90 DEGREES CLOCKWISE.`;
+            setTimeout(() => {
+                textEl.innerHTML = "CURRENT VECTOR: STABLE.<br>CHOOSE NEXT RECURSIVE VECTOR:";
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
