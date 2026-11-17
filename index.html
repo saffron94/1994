@@ -93,121 +93,31 @@
         </div>
     </div>
 
+    <!-- Authentic Recorded Modem Audio Sample -->
+    <audio id="modem-audio" src="https://raw.githubusercontent.com/checkdigits/build_over_dialup/master/build_over_dialup.mp3" preload="auto"></audio>
+
     <script>
-        // High-fidelity programmatic 1994 Modem Handshake Generator (iOS Safari Compatible)
-        function playAuthenticModem() {
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
-                const now = ctx.currentTime;
+        const modemAudio = document.getElementById('modem-audio');
 
-                // 1. Standard US Dial Tone (350Hz + 440Hz)
-                playDualTone(ctx, 350, 440, now, 0.4, 0.05);
-
-                // 2. DTMF Dialing Sequence for digits 1-9-9-4
-                playDTMF(ctx, 697, 1209, now + 0.5, 0.07); // 1
-                playDTMF(ctx, 770, 1477, now + 0.60, 0.07); // 9
-                playDTMF(ctx, 770, 1477, now + 0.70, 0.07); // 9
-                playDTMF(ctx, 697, 1336, now + 0.80, 0.07); // 4
-
-                // 3. Line static and switching noise
-                playStaticBurst(ctx, now + 0.95, 0.8, 800, 2500);
-
-                // 4. Remote Modem Answering Tone (2100Hz high tone)
-                playTone(ctx, 2100, now + 1.8, 1.2, 0.07, 'sine');
-
-                // 5. V.32bis Training Phase: Scrambled carrier sweeps & screeches
-                playSweeps(ctx, now + 3.0, 1.5);
-
-                // 6. Final data carrier lock
-                playStaticBurst(ctx, now + 4.5, 0.5, 1200, 2400);
-                playTone(ctx, 2400, now + 5.0, 0.3, 0.05, 'sine');
-
-            } catch (e) {
-                console.log('Audio context restricted:', e);
-            }
-        }
-
-        function playTone(ctx, freq, start, duration, vol, type) {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = type || 'sine';
-            osc.frequency.setValueAtTime(freq, start);
-            gain.gain.setValueAtTime(vol, start);
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(start);
-            osc.stop(start + duration);
-        }
-
-        function playDualTone(ctx, f1, f2, start, duration, vol) {
-            playTone(ctx, f1, start, duration, vol, 'sine');
-            playTone(ctx, f2, start, duration, vol, 'sine');
-        }
-
-        function playDTMF(ctx, f1, f2, start, duration) {
-            playTone(ctx, f1, start, duration, 0.05, 'sine');
-            playTone(ctx, f2, start, duration, 0.05, 'sine');
-        }
-
-        function playStaticBurst(ctx, start, duration, lowFreq, highFreq) {
-            const bufferSize = ctx.sampleRate * duration;
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            const noise = ctx.createBufferSource();
-            noise.buffer = buffer;
-
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'bandpass';
-            filter.frequency.setValueAtTime(lowFreq, start);
-            filter.frequency.linearRampToValueAtTime(highFreq, start + duration);
-            filter.Q.value = 4;
-
-            const gain = ctx.createGain();
-            gain.gain.setValueAtTime(0.07, start);
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(ctx.destination);
-
-            noise.start(start);
-            noise.stop(start + duration);
-        }
-
-        function playSweeps(ctx, start, duration) {
-            const steps = 12;
-            const stepDur = duration / steps;
-            const freqs = [1200, 2400, 900, 1800, 2200, 1500, 2800, 1100, 2000, 1600, 2500, 1300];
-            const types = ['sawtooth', 'square', 'sawtooth', 'square', 'sine'];
-
-            for (let i = 0; i < steps; i++) {
-                playTone(ctx, freqs[i], start + (i * stepDur), stepDur, 0.05, types[i % types.length]);
-            }
-        }
-
-        // Button Click Event Handler
         document.getElementById('action-btn').addEventListener('click', function() {
-            playAuthenticModem();
+            // Play the genuine recorded audio sample
+            modemAudio.currentTime = 0;
+            modemAudio.play().catch(err => {
+                console.log('Audio playback blocked:', err);
+            });
 
             const textEl = document.getElementById('terminal-text');
             const btnEl = document.getElementById('action-btn');
             const navEl = document.getElementById('nav-matrix');
 
             btnEl.style.display = 'none';
-            textEl.innerHTML = "DIALING 555-1994...<br>SYNCHRONIZING CARRIER SIGNAL...";
+            textEl.innerHTML = "DIALING 555-1994...<br>ACQUIRING CARRIER SIGNAL...";
 
+            // Matches the full duration of the authentic modem handshake sequence
             setTimeout(() => {
                 textEl.innerHTML = "CONNECT 14400 / V.32BIS<br>WARNING: SYSTEM PROTOCOL ENFORCES RIGHT-TURN-ONLY TRAVERSAL.";
                 navEl.style.display = 'flex';
-            }, 5300);
+            }, 7000);
         });
 
         function navigateNode(direction) {
